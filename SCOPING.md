@@ -104,7 +104,7 @@ Chunk:
 ## TECH STACK
 - Backend: FastAPI
 - Frontend: React / Vite
-- DB: SQLite with very light SQL
+- DB: SQLite with very light SQL to start
 
 ## Other notes
 
