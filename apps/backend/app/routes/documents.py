@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse, Response
 
 from app.core.deps import get_document_service, get_search_service
 from app.models.api import (
+    CreateFromTemplateRequest,
+    DocumentResponse,
     DocumentSummaryResponse,
     PatchDocumentRequest,
     SearchMatchResponse,
@@ -80,6 +82,28 @@ def search_in_document(
         for m in page
     ]
     return SearchResponse(matches=matches, total=total)
+
+
+## create a new document from a template (copy); must be before /{doc_id}
+@router.post("/from-template", status_code=201, response_model=DocumentResponse)
+def create_from_template(
+    body: CreateFromTemplateRequest,
+    _service: DocumentService = Depends(get_document_service),
+) -> JSONResponse:
+    """Create a new document as a copy of the given template. Returns the new document (use its id for PATCH)."""
+    try:
+        doc = _service.create_document_from_template(
+            body.template_id,
+            title=body.title,
+        )
+    except DocumentNotFoundError:
+        raise HTTPException(status_code=404, detail="Template not found")
+    response_body = doc_to_response(doc).model_dump(mode="json")
+    return JSONResponse(
+        content=response_body,
+        status_code=201,
+        headers={VERSION_HEADER: str(doc.version)},
+    )
 
 
 ## get full document by id

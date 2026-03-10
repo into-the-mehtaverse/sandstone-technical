@@ -70,6 +70,26 @@ class DocumentService:
             doc_type=doc_type,
         )
 
+    ## create a new document by copying a template (or any document)
+    def create_document_from_template(
+        self,
+        template_id: str,
+        *,
+        title: str | None = None,
+    ) -> Document:
+        """
+        Create a new document with the same content as the template. New doc gets a new id and version 1.
+        Raises DocumentNotFoundError if template_id does not exist.
+        """
+        template = self._store.get_document(template_id)
+        if template is None:
+            raise DocumentNotFoundError()
+        new_title = title if title is not None else f"Copy of {template.title}"
+        return self._store.create_document(
+            title=new_title,
+            content=template.content,
+        )
+
     ## create a new document from uploaded file
     ## we only accept .docx files and extract the text from the file
     def create_document_from_upload(

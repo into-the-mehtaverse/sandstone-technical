@@ -75,6 +75,18 @@ class PatchDocumentRequest(BaseModel):
     changes: list[DocumentChange] = Field(default_factory=list, description="List of replace operations")
 
 
+# ---- Create from template (POST /documents/from-template) ----
+
+
+class CreateFromTemplateRequest(BaseModel):
+    """Body for POST /documents/from-template. Creates a new document as a copy of the template."""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    template_id: str = Field(..., alias="templateId", description="ID of the template document to copy")
+    title: str | None = Field(None, description="Title for the new document; default 'Copy of {template.title}'")
+
+
 # ---- Search response (API contract) ----
 
 
