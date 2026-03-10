@@ -1,81 +1,75 @@
 "use client";
 
-import { useState } from "react";
-import { DocumentEditor } from "@/components/document-editor";
-import { Button } from "@/components/ui/button";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-
-/** List endpoint returns summaries (no content). */
-type DocumentSummary = {
-  id: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-  version: number;
-  party_id: string | null;
-  party_name: string | null;
-  doc_type: string | null;
-};
-
-/** Single-doc endpoint returns full document (with content). */
-type DocumentResponse = DocumentSummary & { content: string };
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { listDocuments, createFromTemplate, type DocumentSummary } from "@/lib/documents";
+import { TemplateList } from "@/components/template-list";
 
 export default function Home() {
-  const [doc, setDoc] = useState<DocumentResponse | null>(null);
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [templates, setTemplates] = useState<DocumentSummary[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [creatingId, setCreatingId] = useState<string | null>(null);
 
-  async function loadDocument() {
+  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     setError(null);
+    listDocuments({ doc_type: "template" })
+      .then((list) => {
+        if (!cancelled) setTemplates(list);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Failed to load templates");
+          setTemplates([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function handleSelectTemplate(templateId: string) {
+    setCreatingId(templateId);
     try {
-      // 1) List loan agreements via metadata filter
-      const listRes = await fetch(
-        `${API_BASE}/documents?doc_type=loan_agreement`
-      );
-      if (!listRes.ok) {
-        setError(listRes.status === 404 ? "No documents found." : `Error ${listRes.status}`);
-        setDoc(null);
-        return;
-      }
-      const summaries: DocumentSummary[] = await listRes.json();
-      const first = summaries[0];
-      if (!first) {
-        setError("No loan agreements found.");
-        setDoc(null);
-        return;
-      }
-      // 2) Fetch full document by id for content
-      const docRes = await fetch(`${API_BASE}/documents/${first.id}`);
-      if (!docRes.ok) {
-        setError(docRes.status === 404 ? "Document not found." : `Error ${docRes.status}`);
-        setDoc(null);
-        return;
-      }
-      const data: DocumentResponse = await docRes.json();
-      setDoc(data);
+      const doc = await createFromTemplate(templateId);
+      router.push(`/document/${doc.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to fetch document.");
-      setDoc(null);
+      const message = e instanceof Error ? e.message : "Failed to create document";
+      toast.error(message);
     } finally {
-      setLoading(false);
+      setCreatingId(null);
     }
   }
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <main className="mx-auto max-w-3xl flex flex-col gap-6">
-        <h1 className="text-2xl font-semibold text-foreground">Document viewer</h1>
-        <Button onClick={loadDocument} disabled={loading}>
-          {loading ? "Loading…" : "Load loan agreement (doc_type=loan_agreement)"}
-        </Button>
+      <main className="mx-auto max-w-4xl flex flex-col gap-6">
+        <h1 className="text-2xl font-semibold text-foreground">Templates</h1>
+        {loading && (
+          <p className="text-muted-foreground text-sm">Loading templates…</p>
+        )}
         {error && (
           <p className="text-sm text-destructive" role="alert">
             {error}
           </p>
         )}
-        {doc && <DocumentEditor document={doc} />}
+        {!loading && !error && (
+          <TemplateList
+            templates={templates}
+            onSelectTemplate={handleSelectTemplate}
+            disabled={creatingId !== null}
+          />
+        )}
+        {creatingId && (
+          <p className="text-sm text-muted-foreground">Creating document…</p>
+        )}
       </main>
     </div>
   );

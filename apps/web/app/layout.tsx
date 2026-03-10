@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -31,6 +33,22 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <header className="sticky top-0 z-10 border-b border-border bg-black px-6 pt-5 pb-3">
+          <Link
+            href="/"
+            className="inline-flex items-center focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black rounded"
+            aria-label="Sandstone home"
+          >
+            <Image
+              src="/sand_full_logo.png"
+              alt="Sandstone"
+              width={120}
+              height={36}
+              className="h-7 w-auto object-contain"
+              priority
+            />
+          </Link>
+        </header>
         {children}
         <Toaster />
       </body>

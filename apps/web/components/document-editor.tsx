@@ -84,7 +84,7 @@ export function DocumentEditor({
         </h1>
       )}
       <textarea
-        className="min-h-[12rem] w-full rounded-md border border-border bg-background px-3 py-3 text-sm text-foreground whitespace-pre-wrap resize-y focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        className="min-h-[32rem] w-full rounded-md border border-border bg-background px-3 py-3 text-sm text-foreground whitespace-pre-wrap resize-y focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="No content."

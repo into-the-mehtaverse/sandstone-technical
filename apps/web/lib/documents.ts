@@ -53,6 +53,57 @@ async function parseError(res: Response): Promise<ApiError> {
   return body;
 }
 
+// ---- listDocuments ----
+
+export type ListDocumentsFilters = {
+  party_id?: string;
+  party_name?: string;
+  doc_type?: string;
+};
+
+/**
+ * List document summaries (no content). Optional filters: party_id, party_name, doc_type.
+ */
+export async function listDocuments(
+  filters: ListDocumentsFilters = {}
+): Promise<DocumentSummary[]> {
+  const params = new URLSearchParams();
+  if (filters.party_id != null) params.set("party_id", filters.party_id);
+  if (filters.party_name != null) params.set("party_name", filters.party_name);
+  if (filters.doc_type != null) params.set("doc_type", filters.doc_type);
+  const qs = params.toString();
+  const url = `${getBase()}/documents${qs ? `?${qs}` : ""}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = await parseError(res);
+    throw new Error(err.error || `HTTP ${err.code}`);
+  }
+  return res.json() as Promise<DocumentSummary[]>;
+}
+
+// ---- createFromTemplate ----
+
+/**
+ * Create a new document as a copy of a template. Returns the new document (use its id for editing).
+ * Throws on 404 if template not found.
+ */
+export async function createFromTemplate(
+  templateId: string,
+  title?: string
+): Promise<Document> {
+  const url = `${getBase()}/documents/from-template`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ templateId, title }),
+  });
+  if (!res.ok) {
+    const err = await parseError(res);
+    throw new Error(err.error || `HTTP ${err.code}`);
+  }
+  return res.json() as Promise<Document>;
+}
+
 // ---- getDocument ----
 
 /**
