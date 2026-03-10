@@ -1,12 +1,18 @@
-"""Document routes: list, get by id, PATCH content. Thin HTTP layer; logic in service."""
+"""Document routes: list, get by id, PATCH content, search. Thin HTTP layer; logic in service."""
 from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query
 from fastapi.responses import JSONResponse, Response
 
-from app.core.deps import get_document_service
-from app.models.api import DocumentSummaryResponse, PatchDocumentRequest
+from app.core.deps import get_document_service, get_search_service
+from app.models.api import (
+    DocumentSummaryResponse,
+    PatchDocumentRequest,
+    SearchMatchResponse,
+    SearchResponse,
+)
 from app.routes.utils.formatting import parse_version_header
 from app.routes.utils.mappers import doc_to_response, summary_to_response
 from app.services.documents import DocumentNotFoundError, DocumentService, PreconditionFailedError
+from app.services.search import SearchService
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -27,6 +33,53 @@ def list_documents(
         doc_type=doc_type,
     )
     return [summary_to_response(s) for s in summaries]
+
+
+## search (must be before /{doc_id} so /documents/search is not matched as doc_id)
+@router.get("/search", response_model=SearchResponse)
+def search_documents(
+    q: str = Query(..., min_length=1, description="Search query (phrase, case-insensitive)"),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    document_ids: list[str] | None = Query(None, description="Restrict to these document IDs"),
+    _service: SearchService = Depends(get_search_service),
+) -> SearchResponse:
+    """Search all documents (or a subset by document_ids). Returns matches and total count."""
+    page, total = _service.search(q=q, limit=limit, offset=offset, document_ids=document_ids)
+    matches = [
+        SearchMatchResponse(
+            document_id=m.document_id,
+            title=m.title,
+            snippet=m.snippet,
+            start_index=m.start_index,
+            end_index=m.end_index,
+        )
+        for m in page
+    ]
+    return SearchResponse(matches=matches, total=total)
+
+
+@router.get("/{doc_id}/search", response_model=SearchResponse)
+def search_in_document(
+    doc_id: str = Path(..., description="Document ID"),
+    q: str = Query(..., min_length=1, description="Search query"),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    _service: SearchService = Depends(get_search_service),
+) -> SearchResponse:
+    """Search within a single document. Same response shape as global search."""
+    page, total = _service.search(q=q, limit=limit, offset=offset, document_ids=[doc_id])
+    matches = [
+        SearchMatchResponse(
+            document_id=m.document_id,
+            title=m.title,
+            snippet=m.snippet,
+            start_index=m.start_index,
+            end_index=m.end_index,
+        )
+        for m in page
+    ]
+    return SearchResponse(matches=matches, total=total)
 
 
 ## get full document by id

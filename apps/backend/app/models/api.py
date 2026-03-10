@@ -31,7 +31,7 @@ class DocumentResponse(DocumentSummaryResponse):
 # ---- Document change (PATCH request) ----
 
 
-## replace range model
+## replace uses range / position based approach
 ## character range [start, end) for a replace operation
 ## start is inclusive, end is exclusive
 ## used to specify the range of characters to replace
@@ -73,3 +73,27 @@ class PatchDocumentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     changes: list[DocumentChange] = Field(default_factory=list, description="List of replace operations")
+
+
+# ---- Search response (API contract) ----
+
+
+class SearchMatchResponse(BaseModel):
+    """Single search hit."""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
+
+    document_id: str = Field(..., alias="documentId")
+    title: str = ""
+    snippet: str = ""
+    start_index: int = Field(..., alias="startIndex")
+    end_index: int = Field(..., alias="endIndex")
+
+
+class SearchResponse(BaseModel):
+    """Search results: matches for this page and total hit count."""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
+
+    matches: list[SearchMatchResponse] = Field(default_factory=list)
+    total: int = 0
