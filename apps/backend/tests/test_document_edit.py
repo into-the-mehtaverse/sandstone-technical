@@ -5,18 +5,18 @@ from app.db.store import DocumentStore
 from app.models.api import DocumentChange, ReplaceRange
 from app.services.documents import DocumentNotFoundError, DocumentService, PreconditionFailedError
 
-
+## in memory store for tests
 @pytest.fixture
 def store() -> DocumentStore:
     """In-memory store for tests."""
     return DocumentStore(path=":memory:")
 
-
+## service for tests
 @pytest.fixture
 def service(store: DocumentStore) -> DocumentService:
     return DocumentService(store)
 
-
+## helper function to create a document change
 def _ch(start: int, end: int, text: str) -> DocumentChange:
     return DocumentChange(operation="replace", range=ReplaceRange(start=start, end=end), text=text)
 

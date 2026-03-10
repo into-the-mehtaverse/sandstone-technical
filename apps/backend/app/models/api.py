@@ -1,7 +1,41 @@
 """API request/response schemas (Pydantic)."""
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
+# ---- Document response (API contract) ----
+
+
+class DocumentSummaryResponse(BaseModel):
+    """Document list item (no content)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    title: str
+    created_at: datetime
+    updated_at: datetime
+    version: int
+    party_id: str | None = None
+    party_name: str | None = None
+    doc_type: str | None = None
+
+
+class DocumentResponse(DocumentSummaryResponse):
+    """Full document (includes content)."""
+
+    content: str
+
+
+# ---- Document change (PATCH request) ----
+
+
+## replace range model
+## character range [start, end) for a replace operation
+## start is inclusive, end is exclusive
+## used to specify the range of characters to replace
+## start must be less than end
 class ReplaceRange(BaseModel):
     """Character range [start, end) for a replace operation."""
 
