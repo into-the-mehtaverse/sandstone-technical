@@ -230,3 +230,10 @@ class DocumentStore:
             party_name=new_party_name,
             doc_type=new_doc_type,
         )
+
+    ## delete document by id
+    def delete_document(self, doc_id: str) -> bool:
+        """Delete document by id. Returns True if a row was deleted, False if not found."""
+        cur = self._conn.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
+        self._conn.commit()
+        return cur.rowcount > 0

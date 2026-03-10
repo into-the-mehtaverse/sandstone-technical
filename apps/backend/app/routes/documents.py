@@ -1,6 +1,7 @@
 """Document routes: list, get by id, PATCH content, search. Thin HTTP layer; logic in service."""
 from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query
 from fastapi.responses import JSONResponse, Response
+from starlette.status import HTTP_204_NO_CONTENT
 
 from app.core.deps import get_document_service, get_search_service
 from app.models.api import (
@@ -104,6 +105,19 @@ def create_from_template(
         status_code=201,
         headers={VERSION_HEADER: str(doc.version)},
     )
+
+
+## delete document by id
+@router.delete("/{doc_id}", status_code=HTTP_204_NO_CONTENT)
+def delete_document(
+    doc_id: str = Path(..., description="Document ID"),
+    _service: DocumentService = Depends(get_document_service),
+) -> None:
+    """Delete document by id. Returns 204 on success, 404 if not found."""
+    try:
+        _service.delete_document(doc_id)
+    except DocumentNotFoundError:
+        raise HTTPException(status_code=404, detail="Document not found")
 
 
 ## get full document by id

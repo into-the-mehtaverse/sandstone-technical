@@ -162,5 +162,11 @@ class DocumentService:
         assert updated is not None
         return updated
 
+    ## delete document by id
+    def delete_document(self, doc_id: str) -> None:
+        """Delete document by id. Raises DocumentNotFoundError if not found."""
+        deleted = self._store.delete_document(doc_id)
+        if not deleted:
+            raise DocumentNotFoundError()
 
     ## SEARCH FEATURES
