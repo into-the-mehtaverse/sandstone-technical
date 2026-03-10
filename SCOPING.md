@@ -116,3 +116,14 @@ Chunk:
 - If etag doesn't match, then we'll reject server side and the changes will remain client side but they'll need to refresh the document and re-apply (automerge is out of scope, we can mention Websockets for Real time and auto-merge for conflict resolition in write up)
 - never overwrite the editor with the refetched document without an explicit user action (and ideally a warning). Maybe can copy client side, have a redline side by side so they can reapply or something.
 **DELIVERABLE** - include unit tests based on interview.md and make sure all this passes.
+
+
+I'm imagining the layout of this simple frontend.
+
+On the home, a user will see which templates documents they have access to.
+
+When the user clicks one, it'll open that template document in a doc editor on the left hand of the screen. very simple document editor, just the ability to change text.
+
+On the right hand, there'll be a search utility. There, they can put the parameters they want to search for, and it'll search for those docs and display the results. Clicking a result will open the document they selected on teh right side of the screen (it won't be editable).
+
+That's it.

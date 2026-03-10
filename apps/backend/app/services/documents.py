@@ -32,6 +32,11 @@ class DocumentService:
         """Return all documents without content (for list views)."""
         return self._store.list_document_summaries()
 
+    ## list template documents (doc_type=template), summaries only
+    def list_template_summaries(self) -> list[DocumentSummary]:
+        """Return document summaries where doc_type is template."""
+        return self._store.list_document_summaries_by_metadata(doc_type="template")
+
     ## get document by id
     def get_document(self, doc_id: str) -> Document | None:
         """Return document by id or None if not found."""

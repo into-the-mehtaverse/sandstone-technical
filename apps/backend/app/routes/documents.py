@@ -22,6 +22,16 @@ def list_documents(
     return [summary_to_response(s) for s in summaries]
 
 
+## list template documents (doc_type=template). Declare before /{doc_id} so "templates" is not captured as id.
+@router.get("/templates", response_model=list[DocumentSummaryResponse])
+def list_templates(
+    _service: DocumentService = Depends(get_document_service),
+):
+    """List all documents with doc_type=template (summaries only, no content)."""
+    summaries = _service.list_template_summaries()
+    return [summary_to_response(s) for s in summaries]
+
+
 ## get full document by id
 @router.get("/{doc_id}")
 def get_document(

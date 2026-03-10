@@ -106,6 +106,36 @@ class DocumentStore:
         cur = self._conn.execute(f"SELECT {_SUMMARY_COLS} FROM documents")
         return [_row_to_summary(row) for row in cur.fetchall()]
 
+    ## select documents by optional metadata filters (no content, for list views)
+    def list_document_summaries_by_metadata(
+        self,
+        *,
+        party_id: str | None = None,
+        party_name: str | None = None,
+        doc_type: str | None = None,
+    ) -> list[DocumentSummary]:
+        """
+        Return document summaries filtered by metadata.
+        All filters are optional; when multiple are provided they are ANDed together.
+        """
+        conditions: list[str] = []
+        params: list[object] = []
+        if party_id is not None:
+            conditions.append("party_id = ?")
+            params.append(party_id)
+        if party_name is not None:
+            conditions.append("party_name = ?")
+            params.append(party_name)
+        if doc_type is not None:
+            conditions.append("doc_type = ?")
+            params.append(doc_type)
+        where = ""
+        if conditions:
+            where = " WHERE " + " AND ".join(conditions)
+        sql = f"SELECT {_SUMMARY_COLS} FROM documents{where}"
+        cur = self._conn.execute(sql, tuple(params))
+        return [_row_to_summary(row) for row in cur.fetchall()]
+
     ## select document by id
     def get_document(self, doc_id: str) -> Document | None:
         """Return document by id or None if not found."""
