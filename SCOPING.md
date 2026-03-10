@@ -108,6 +108,7 @@ Chunk:
 
 ## Other notes
 
+- We accept .txt and .docx
 - Assume explict saves, not auto-update on keystroke
 - If etag doesn't match, then we'll reject server side and the changes will remain client side but they'll need to refresh the document and re-apply (automerge is out of scope, we can mention Websockets for Real time and auto-merge for conflict resolition in write up)
 - never overwrite the editor with the refetched document without an explicit user action (and ideally a warning). Maybe can copy client side, have a redline side by side so they can reapply or something.
