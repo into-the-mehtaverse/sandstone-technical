@@ -68,11 +68,12 @@ class DocumentChange(BaseModel):
 
 
 class PatchDocumentRequest(BaseModel):
-    """Body for PATCH /documents/{id}. Changes applied in reverse order by range.start."""
+    """Body for PATCH /documents/{id}. Changes applied in reverse order by range.start. Optional title update."""
 
     model_config = ConfigDict(extra="forbid")
 
     changes: list[DocumentChange] = Field(default_factory=list, description="List of replace operations")
+    title: str | None = Field(None, description="If set, update the document title")
 
 
 # ---- Create from template (POST /documents/from-template) ----

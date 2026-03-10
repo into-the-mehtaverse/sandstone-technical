@@ -1,6 +1,6 @@
 /**
- * Minimal API client for documents: get and patch.
- * Backend returns snake_case (e.g. created_at, updated_at).
+ * API client for documents: list, get, patch, create from template, and search.
+ * Document responses use snake_case; search responses use camelCase.
  */
 
 const getBase = () =>
@@ -34,6 +34,21 @@ export type DocumentChange = {
   operation: "replace";
   range: ReplaceRange;
   text: string;
+};
+
+// ---- Search response (backend returns camelCase) ----
+
+export type SearchMatch = {
+  documentId: string;
+  title: string;
+  snippet: string;
+  startIndex: number;
+  endIndex: number;
+};
+
+export type SearchResponse = {
+  matches: SearchMatch[];
+  total: number;
 };
 
 // ---- API errors (shared error shape from backend) ----
@@ -131,26 +146,89 @@ export async function getDocument(
 // ---- patchDocument ----
 
 /**
- * Apply range-based changes to document. Sends If-Match: version.
+ * Apply range-based changes and/or title update. Sends If-Match: version.
  * Returns updated document. Throws on 404, 412 (version mismatch), 400 (e.g. out of range).
  */
 export async function patchDocument(
   id: string,
   version: number,
-  changes: DocumentChange[]
+  changes: DocumentChange[],
+  options?: { title?: string }
 ): Promise<Document> {
   const url = `${getBase()}/documents/${encodeURIComponent(id)}`;
+  const body: { changes: DocumentChange[]; title?: string } = { changes };
+  if (options?.title !== undefined) body.title = options.title;
   const res = await fetch(url, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       "If-Match": String(version),
     },
-    body: JSON.stringify({ changes }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const err = await parseError(res);
     throw new Error(err.error || `HTTP ${err.code}`);
   }
   return res.json() as Promise<Document>;
+}
+
+// ---- searchDocuments ----
+
+export type SearchDocumentsOptions = {
+  limit?: number;
+  offset?: number;
+  documentIds?: string[];
+};
+
+/**
+ * Search all documents (or a subset by documentIds). Returns matches and total count.
+ * q is required; limit/offset for pagination.
+ */
+export async function searchDocuments(
+  q: string,
+  options: SearchDocumentsOptions = {}
+): Promise<SearchResponse> {
+  const params = new URLSearchParams();
+  params.set("q", q.trim());
+  if (options.limit != null) params.set("limit", String(options.limit));
+  if (options.offset != null) params.set("offset", String(options.offset));
+  if (options.documentIds?.length) {
+    options.documentIds.forEach((id) => params.append("document_ids", id));
+  }
+  const url = `${getBase()}/documents/search?${params.toString()}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = await parseError(res);
+    throw new Error(err.error || `HTTP ${err.code}`);
+  }
+  return res.json() as Promise<SearchResponse>;
+}
+
+// ---- searchInDocument ----
+
+export type SearchInDocumentOptions = {
+  limit?: number;
+  offset?: number;
+};
+
+/**
+ * Search within a single document. Same response shape as searchDocuments.
+ */
+export async function searchInDocument(
+  docId: string,
+  q: string,
+  options: SearchInDocumentOptions = {}
+): Promise<SearchResponse> {
+  const params = new URLSearchParams();
+  params.set("q", q.trim());
+  if (options.limit != null) params.set("limit", String(options.limit));
+  if (options.offset != null) params.set("offset", String(options.offset));
+  const url = `${getBase()}/documents/${encodeURIComponent(docId)}/search?${params.toString()}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = await parseError(res);
+    throw new Error(err.error || `HTTP ${err.code}`);
+  }
+  return res.json() as Promise<SearchResponse>;
 }

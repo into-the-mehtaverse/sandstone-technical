@@ -141,7 +141,9 @@ def patch_document(
     """Apply changes to document content. Requires If-Match: version. 412 if missing or mismatch."""
     try:
         version = parse_version_header(if_match)
-        doc = _service.update_document_content(doc_id, version, body.changes)
+        doc = _service.update_document_content(
+            doc_id, version, body.changes, title=body.title
+        )
     except DocumentNotFoundError:
         raise HTTPException(status_code=404, detail="Document not found")
     except PreconditionFailedError:

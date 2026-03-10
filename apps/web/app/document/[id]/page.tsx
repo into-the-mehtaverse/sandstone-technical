@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DocumentEditor } from "@/components/document-editor";
+import { SearchPanel } from "@/components/search-panel";
 import { getDocument, type Document } from "@/lib/documents";
 
 export default function DocumentPage() {
@@ -71,7 +72,7 @@ export default function DocumentPage() {
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="mx-auto max-w-3xl flex flex-col gap-4">
+      <div className="mx-auto max-w-6xl flex flex-col gap-4">
         <button
           type="button"
           onClick={() => router.push("/")}
@@ -79,7 +80,14 @@ export default function DocumentPage() {
         >
           ← Back to templates
         </button>
-        <DocumentEditor document={doc} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <DocumentEditor document={doc} />
+          </div>
+          <aside className="lg:border-l lg:border-border lg:pl-6 pt-4 lg:pt-0">
+            <SearchPanel documentId={doc.id} />
+          </aside>
+        </div>
       </div>
     </div>
   );

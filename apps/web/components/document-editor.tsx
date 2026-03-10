@@ -24,12 +24,16 @@ export function DocumentEditor({
   className,
   onSave,
 }: DocumentEditorProps) {
+  const [title, setTitle] = useState(initialDoc.title);
+  const [lastSavedTitle, setLastSavedTitle] = useState(initialDoc.title);
   const [content, setContent] = useState(initialDoc.content);
   const [lastSavedContent, setLastSavedContent] = useState(initialDoc.content);
   const [version, setVersion] = useState(initialDoc.version);
   const [saving, setSaving] = useState(false);
 
-  const hasUnsavedChanges = content !== lastSavedContent;
+  const contentChanged = content !== lastSavedContent;
+  const titleChanged = title !== lastSavedTitle;
+  const hasUnsavedChanges = contentChanged || titleChanged;
 
   const handleSave = useCallback(async () => {
     if (!hasUnsavedChanges) {
@@ -38,16 +42,23 @@ export function DocumentEditor({
     }
 
     const changes: DocumentChange[] = contentToReplaceChanges(lastSavedContent, content);
-    if (changes.length === 0) {
+    const sendTitle = titleChanged ? title : undefined;
+
+    if (changes.length === 0 && sendTitle === undefined) {
       setLastSavedContent(content);
+      setLastSavedTitle(title);
       toast.success("Saved.");
       return;
     }
 
     setSaving(true);
     try {
-      const updated = await patchDocument(initialDoc.id, version, changes);
+      const updated = await patchDocument(initialDoc.id, version, changes, {
+        title: sendTitle,
+      });
       setLastSavedContent(updated.content);
+      setLastSavedTitle(updated.title);
+      setTitle(updated.title);
       setVersion(updated.version);
       setContent(updated.content);
       toast.success("Saved.");
@@ -72,17 +83,26 @@ export function DocumentEditor({
     version,
     content,
     lastSavedContent,
+    title,
+    lastSavedTitle,
+    titleChanged,
     hasUnsavedChanges,
     onSave,
   ]);
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
-      {initialDoc.title != null && initialDoc.title !== "" && (
-        <h1 className="text-lg font-semibold text-foreground">
-          {initialDoc.title}
-        </h1>
-      )}
+      <label htmlFor="doc-title" className="sr-only">
+        Document title
+      </label>
+      <input
+        id="doc-title"
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="text-lg font-semibold text-foreground bg-transparent border-b border-border focus:outline-none focus:ring-0 focus:border-ring pb-1"
+        placeholder="Untitled"
+      />
       <textarea
         className="min-h-[32rem] w-full rounded-md border border-border bg-background px-3 py-3 text-sm text-foreground whitespace-pre-wrap resize-y focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         value={content}

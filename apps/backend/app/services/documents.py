@@ -131,10 +131,12 @@ class DocumentService:
         doc_id: str,
         if_match_version: int | None,
         changes: list[DocumentChange],
+        *,
+        title: str | None = None,
     ) -> Document:
         """
-        Apply range-based changes to document content. Each change has operation "replace",
-        range { start, end }, and text (empty = removal). Sorted by range.start descending.
+        Apply range-based changes to document content and optionally update title.
+        Each change has operation "replace", range { start, end }, and text.
         Raises DocumentNotFoundError if doc does not exist.
         Raises PreconditionFailedError if If-Match version is missing or does not match.
         Raises ValueError if a range is out of bounds for the current content.
@@ -146,7 +148,6 @@ class DocumentService:
             raise PreconditionFailedError()
         content = doc.content
         n = len(content)
-        # Sort by range.start descending so we can apply without tracking offset
         sorted_changes = sorted(changes, key=lambda c: c.range.start, reverse=True)
         for c in sorted_changes:
             start, end, text = c.range.start, c.range.end, c.text
@@ -155,7 +156,9 @@ class DocumentService:
                     f"Change range [{start}, {end}) out of bounds for content length {n}"
                 )
             content = content[:start] + text + content[end:]
-        updated = self._store.update_document(doc_id, content=content) ## update the store with the updated content
+        updated = self._store.update_document(
+            doc_id, content=content, title=title if title is not None else None
+        )
         assert updated is not None
         return updated
 
