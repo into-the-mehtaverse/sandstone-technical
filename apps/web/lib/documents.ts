@@ -173,6 +173,20 @@ export async function patchDocument(
   return res.json() as Promise<Document>;
 }
 
+// ---- deleteDocument ----
+
+/**
+ * Delete document by id. Throws on 404.
+ */
+export async function deleteDocument(id: string): Promise<void> {
+  const url = `${getBase()}/documents/${encodeURIComponent(id)}`;
+  const res = await fetch(url, { method: "DELETE" });
+  if (!res.ok) {
+    const err = await parseError(res);
+    throw new Error(err.error || `HTTP ${err.code}`);
+  }
+}
+
 // ---- searchDocuments ----
 
 export type SearchDocumentsOptions = {

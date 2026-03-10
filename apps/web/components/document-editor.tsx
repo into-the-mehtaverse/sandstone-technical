@@ -14,6 +14,10 @@ export type DocumentEditorProps = {
   className?: string;
   /** Called after a successful save with the updated document. */
   onSave?: (doc: Document) => void;
+  /** When set, show Delete button and call this when clicked. */
+  onDelete?: () => void | Promise<void>;
+  /** When true, Delete button shows "Deleting…" and is disabled. */
+  isDeleting?: boolean;
 };
 
 /**
@@ -24,6 +28,8 @@ export function DocumentEditor({
   document: initialDoc,
   className,
   onSave,
+  onDelete,
+  isDeleting = false,
 }: DocumentEditorProps) {
   const { patch, patching, error: patchError, resetError } = usePatchDocument();
   const [title, setTitle] = useState(initialDoc.title);
@@ -113,14 +119,27 @@ export function DocumentEditor({
         placeholder="No content."
         aria-label="Document content"
       />
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Button
           onClick={handleSave}
           disabled={patching || !hasUnsavedChanges}
           size="sm"
+          className="rounded-none"
         >
           {patching ? "Saving…" : "Save"}
         </Button>
+        {onDelete && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onDelete}
+            disabled={isDeleting}
+            className="rounded-none text-destructive border-destructive/50 hover:bg-destructive/10 hover:border-destructive"
+          >
+            {isDeleting ? "Deleting…" : "Delete"}
+          </Button>
+        )}
         {hasUnsavedChanges && (
           <span className="text-xs text-muted-foreground">
             Unsaved changes
