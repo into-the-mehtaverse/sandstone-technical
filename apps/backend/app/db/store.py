@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from app.db.schemas import Document, DocumentSummary
 
-## table schema defined here, can be moved into orm layer if project is extended
+## document table creation sql defined here, can be moved into orm layer if project is extended
 _TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS documents (
     id TEXT PRIMARY KEY,
