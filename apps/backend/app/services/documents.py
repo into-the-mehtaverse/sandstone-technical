@@ -43,14 +43,16 @@ class DocumentService:
         title: str,
         content: str = "",
         *,
+        id: str | None = None,
         party_id: str | None = None,
         party_name: str | None = None,
         doc_type: str | None = None,
     ) -> Document:
-        """Create a new document with the given title and content."""
+        """Create a new document with the given title and content. Optional id for seeded docs."""
         return self._store.create_document(
             title=title,
             content=content,
+            id=id,
             party_id=party_id,
             party_name=party_name,
             doc_type=doc_type,
@@ -65,6 +67,7 @@ class DocumentService:
         file_bytes: bytes,
         filename: str | None = None,
         content_type: str | None = None,
+        id: str | None = None,
         party_id: str | None = None,
         party_name: str | None = None,
         doc_type: str | None = None,
@@ -82,6 +85,7 @@ class DocumentService:
         return self._store.create_document(
             title=title,
             content=content,
+            id=id,
             party_id=party_id,
             party_name=party_name,
             doc_type=doc_type,

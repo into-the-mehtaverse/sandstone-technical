@@ -13,7 +13,7 @@ def get_store() -> DocumentStore:
     """Document store (SQLite path from config; override in tests for :memory:)."""
     global _store
     if _store is None:
-        _store = DocumentStore(path=settings.document_db_path)
+        _store = DocumentStore(path=settings.get_document_db_path())
     return _store
 
 

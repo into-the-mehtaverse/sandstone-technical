@@ -122,14 +122,16 @@ class DocumentStore:
         title: str,
         content: str = "",
         *,
+        id: str | None = None,
         party_id: str | None = None,
         party_name: str | None = None,
         doc_type: str | None = None,
     ) -> Document:
-        """Create a new document and return it."""
+        """Create a new document and return it. Optional id for seeded/fixed ids."""
         doc = Document.create(
             title=title,
             content=content,
+            id=id,
             party_id=party_id,
             party_name=party_name,
             doc_type=doc_type,

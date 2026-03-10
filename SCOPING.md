@@ -17,8 +17,8 @@ POST /documents
 
 PATCH /documents/{id}
     - Request:
-    - Response: full new document text, new eTag
-    - Header: If-Match: "<etag>", 412 if missing or doesn't match.
+    - Response: full new document text, new version
+    - Header: If-Match, 412 if missing or doesn't match.
     - Notes: Apply changes in array order; targets relative to document state at start of request. Use a single name for “new text” in PATCH (e.g. replacement everywhere, or text in the change object).
 
 and then search related
@@ -42,7 +42,10 @@ Document:
 - content (full text)
 - createdAt
 - updatedAt
-- etag (cache of hash)
+- partyId
+- partyName
+- docType
+- version
 
 #### OPTIONAL / FUTURE DATA MODELS:
 
@@ -64,9 +67,9 @@ Chunk:
 ## APPROACHES:
 
  - REPLACE (target, bulk operations):
-    - Occurrence based and range based
-    - One PATCH = one array of changes, apply in array order
-    - Positions and occurences are relative to the document state at the start of the request (so later changes don't invalidate old ones)
+    - Range based only
+    - One PATCH = one array of changes, apply in reverse array order
+    - No offset needed this way
 
 
  - MEMORY MANAGEMENT:

@@ -40,13 +40,14 @@ class Document:
         title: str,
         content: str = "",
         *,
+        id: str | None = None,
         party_id: str | None = None,
         party_name: str | None = None,
         doc_type: str | None = None,
         version: int = 1,
     ) -> "Document":
         now = datetime.now(timezone.utc)
-        doc_id = str(uuid.uuid4())
+        doc_id = id if id is not None else str(uuid.uuid4())
         return cls(
             id=doc_id,
             title=title,
