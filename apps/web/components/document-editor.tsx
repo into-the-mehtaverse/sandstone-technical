@@ -1,30 +1,108 @@
 "use client";
 
+import { useState, useCallback } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { patchDocument, type Document, type DocumentChange } from "@/lib/documents";
+import { contentToReplaceChanges } from "@/lib/diff-content";
+import { Button } from "@/components/ui/button";
 
-type DocumentEditorProps = {
-  /** Document body text to render */
-  content: string;
-  /** Optional document title shown above the content */
-  title?: string;
+export type DocumentEditorProps = {
+  /** Initial document (id, version, title, content). Editor keeps its own state after load. */
+  document: Document;
   className?: string;
+  /** Called after a successful save with the updated document. */
+  onSave?: (doc: Document) => void;
 };
 
 /**
- * Renders a document's content (and optional title).
- * Use this for read-only display; extend later for editing + PATCH.
+ * Editable document editor. Tracks content vs last-saved, derives replace changes on save,
+ * and shows success or conflict toasts.
  */
-export function DocumentEditor({ content, title, className }: DocumentEditorProps) {
+export function DocumentEditor({
+  document: initialDoc,
+  className,
+  onSave,
+}: DocumentEditorProps) {
+  const [content, setContent] = useState(initialDoc.content);
+  const [lastSavedContent, setLastSavedContent] = useState(initialDoc.content);
+  const [version, setVersion] = useState(initialDoc.version);
+  const [saving, setSaving] = useState(false);
+
+  const hasUnsavedChanges = content !== lastSavedContent;
+
+  const handleSave = useCallback(async () => {
+    if (!hasUnsavedChanges) {
+      toast.info("No changes to save.");
+      return;
+    }
+
+    const changes: DocumentChange[] = contentToReplaceChanges(lastSavedContent, content);
+    if (changes.length === 0) {
+      setLastSavedContent(content);
+      toast.success("Saved.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const updated = await patchDocument(initialDoc.id, version, changes);
+      setLastSavedContent(updated.content);
+      setVersion(updated.version);
+      setContent(updated.content);
+      toast.success("Saved.");
+      onSave?.(updated);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const is412 =
+        message.includes("412") ||
+        message.toLowerCase().includes("precondition");
+      if (is412) {
+        toast.error(
+          "Conflict: document was changed elsewhere. Refetch to get the latest version."
+        );
+      } else {
+        toast.error(message || "Save failed.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }, [
+    initialDoc.id,
+    version,
+    content,
+    lastSavedContent,
+    hasUnsavedChanges,
+    onSave,
+  ]);
+
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
-      {title != null && title !== "" && (
-        <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+    <div className={cn("flex flex-col gap-3", className)}>
+      {initialDoc.title != null && initialDoc.title !== "" && (
+        <h1 className="text-lg font-semibold text-foreground">
+          {initialDoc.title}
+        </h1>
       )}
-      <div
-        className="min-h-[12rem] rounded-md border border-border bg-background px-3 py-3 text-sm text-foreground whitespace-pre-wrap"
-        role="document"
-      >
-        {content || "No content."}
+      <textarea
+        className="min-h-[12rem] w-full rounded-md border border-border bg-background px-3 py-3 text-sm text-foreground whitespace-pre-wrap resize-y focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="No content."
+        aria-label="Document content"
+      />
+      <div className="flex items-center gap-2">
+        <Button
+          onClick={handleSave}
+          disabled={saving || !hasUnsavedChanges}
+          size="sm"
+        >
+          {saving ? "Saving…" : "Save"}
+        </Button>
+        {hasUnsavedChanges && (
+          <span className="text-xs text-muted-foreground">
+            Unsaved changes
+          </span>
+        )}
       </div>
     </div>
   );

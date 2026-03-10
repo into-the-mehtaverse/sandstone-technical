@@ -75,7 +75,7 @@ export default function Home() {
             {error}
           </p>
         )}
-        {doc && <DocumentEditor title={doc.title} content={doc.content} />}
+        {doc && <DocumentEditor document={doc} />}
       </main>
     </div>
   );
