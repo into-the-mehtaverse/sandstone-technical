@@ -3,8 +3,9 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { patchDocument, type Document, type DocumentChange } from "@/lib/documents";
+import { usePatchDocument } from "@/hooks/use-documents";
 import { contentToReplaceChanges } from "@/lib/diff-content";
+import type { Document, DocumentChange } from "@/lib/documents";
 import { Button } from "@/components/ui/button";
 
 export type DocumentEditorProps = {
@@ -24,12 +25,12 @@ export function DocumentEditor({
   className,
   onSave,
 }: DocumentEditorProps) {
+  const { patch, patching, error: patchError, resetError } = usePatchDocument();
   const [title, setTitle] = useState(initialDoc.title);
   const [lastSavedTitle, setLastSavedTitle] = useState(initialDoc.title);
   const [content, setContent] = useState(initialDoc.content);
   const [lastSavedContent, setLastSavedContent] = useState(initialDoc.content);
   const [version, setVersion] = useState(initialDoc.version);
-  const [saving, setSaving] = useState(false);
 
   const contentChanged = content !== lastSavedContent;
   const titleChanged = title !== lastSavedTitle;
@@ -51,11 +52,12 @@ export function DocumentEditor({
       return;
     }
 
-    setSaving(true);
-    try {
-      const updated = await patchDocument(initialDoc.id, version, changes, {
-        title: sendTitle,
-      });
+    resetError();
+    const updated = await patch(initialDoc.id, version, changes, {
+      title: sendTitle,
+    });
+
+    if (updated) {
       setLastSavedContent(updated.content);
       setLastSavedTitle(updated.title);
       setTitle(updated.title);
@@ -63,8 +65,8 @@ export function DocumentEditor({
       setContent(updated.content);
       toast.success("Saved.");
       onSave?.(updated);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+    } else {
+      const message = patchError ?? "Save failed.";
       const is412 =
         message.includes("412") ||
         message.toLowerCase().includes("precondition");
@@ -73,10 +75,8 @@ export function DocumentEditor({
           "Conflict: document was changed elsewhere. Refetch to get the latest version."
         );
       } else {
-        toast.error(message || "Save failed.");
+        toast.error(message);
       }
-    } finally {
-      setSaving(false);
     }
   }, [
     initialDoc.id,
@@ -87,6 +87,9 @@ export function DocumentEditor({
     lastSavedTitle,
     titleChanged,
     hasUnsavedChanges,
+    patch,
+    patchError,
+    resetError,
     onSave,
   ]);
 
@@ -113,10 +116,10 @@ export function DocumentEditor({
       <div className="flex items-center gap-2">
         <Button
           onClick={handleSave}
-          disabled={saving || !hasUnsavedChanges}
+          disabled={patching || !hasUnsavedChanges}
           size="sm"
         >
-          {saving ? "Saving…" : "Save"}
+          {patching ? "Saving…" : "Save"}
         </Button>
         {hasUnsavedChanges && (
           <span className="text-xs text-muted-foreground">
