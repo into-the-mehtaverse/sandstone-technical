@@ -14,8 +14,8 @@ from app.services.search import SearchService
 # 10MB document for performance benchmarks
 LARGE_DOC_SIZE = 10 * 1024 * 1024
 # Max seconds for PATCH / search on 10MB (generous for CI)
-MAX_PATCH_SECONDS = 5.0
-MAX_SEARCH_SECONDS = 5.0
+MAX_PATCH_SECONDS = 1.0
+MAX_SEARCH_SECONDS = 1.0
 # Max seconds for search across N documents (10MB each)
 MAX_SEARCH_N_DOCS_SECONDS = {10: 1.0, 100: 1.0, 1000: 1.0}
 
