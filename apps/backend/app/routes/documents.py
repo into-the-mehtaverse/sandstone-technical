@@ -1,5 +1,5 @@
 """Document routes: list, get by id, PATCH content. Thin HTTP layer; logic in service."""
-from fastapi import APIRouter, Depends, Header, HTTPException, Path
+from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query
 from fastapi.responses import JSONResponse, Response
 
 from app.core.deps import get_document_service
@@ -12,23 +12,20 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 
 VERSION_HEADER = "Version"
 
-## list all documents (summaries only, no content)
+## list documents (summaries only, no content). Optional query params filter by metadata.
 @router.get("", response_model=list[DocumentSummaryResponse])
 def list_documents(
+    party_id: str | None = Query(None, description="Filter by party_id"),
+    party_name: str | None = Query(None, description="Filter by party_name"),
+    doc_type: str | None = Query(None, description="Filter by doc_type (e.g. template, loan_agreement)"),
     _service: DocumentService = Depends(get_document_service),
 ):
-    """List all documents (summaries only, no content)."""
-    summaries = _service.list_document_summaries()
-    return [summary_to_response(s) for s in summaries]
-
-
-## list template documents (doc_type=template). Declare before /{doc_id} so "templates" is not captured as id.
-@router.get("/templates", response_model=list[DocumentSummaryResponse])
-def list_templates(
-    _service: DocumentService = Depends(get_document_service),
-):
-    """List all documents with doc_type=template (summaries only, no content)."""
-    summaries = _service.list_template_summaries()
+    """List documents (summaries only). Omit query params for all; use party_id, party_name, or doc_type to filter."""
+    summaries = _service.list_document_summaries(
+        party_id=party_id,
+        party_name=party_name,
+        doc_type=doc_type,
+    )
     return [summary_to_response(s) for s in summaries]
 
 

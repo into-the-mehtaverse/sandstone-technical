@@ -27,15 +27,22 @@ class DocumentService:
         """Return all documents with content."""
         return self._store.list_documents()
 
-    ## list all documents without content for list views
-    def list_document_summaries(self) -> list[DocumentSummary]:
-        """Return all documents without content (for list views)."""
+    ## list document summaries, optionally filtered by metadata (party_id, party_name, doc_type)
+    def list_document_summaries(
+        self,
+        *,
+        party_id: str | None = None,
+        party_name: str | None = None,
+        doc_type: str | None = None,
+    ) -> list[DocumentSummary]:
+        """Return document summaries (no content). Pass any of party_id, party_name, doc_type to filter; all if none."""
+        if party_id is not None or party_name is not None or doc_type is not None:
+            return self._store.list_document_summaries_by_metadata(
+                party_id=party_id,
+                party_name=party_name,
+                doc_type=doc_type,
+            )
         return self._store.list_document_summaries()
-
-    ## list template documents (doc_type=template), summaries only
-    def list_template_summaries(self) -> list[DocumentSummary]:
-        """Return document summaries where doc_type is template."""
-        return self._store.list_document_summaries_by_metadata(doc_type="template")
 
     ## get document by id
     def get_document(self, doc_id: str) -> Document | None:
