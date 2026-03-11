@@ -43,7 +43,7 @@ Interactive API docs: `http://localhost:8000/docs` when the backend is running.
 
 9. **Minimal frontend**: The frontend is intentionally minimal given the scope of the assignment. In a more robust project, I'd recommend using Zustand for application state, React Query for server state, Zod for typing.
 
-10. **Feature ideas**: Frontend includes bug report button and UI for an LLM driven semantic query on previous docs with a specific counterparty. These are meant to be purely conceptual and are not wired into any backend endpoint.
+10. **Feature ideas**: Frontend includes bug report button and UI for an LLM driven semantic query on previous docs with a specific counterparty. These are meant to be purely conceptual and are not wired into any backend endpoint. Bug report / feature request would feed into a slack channel; LLM integration needs chunking / vector DB to be properly functional (but simplest version could just input most recent docs from counter party into context)
 
 11. **Document Upload Flow**: The repo intentionally excludes user driven document upload given lack of blob storage. The production flow would be, user sends request with document metadata, backend responds with signedUrl, frontend uploads directly to blob storage.
 
