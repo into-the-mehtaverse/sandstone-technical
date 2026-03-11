@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { BugReportFab } from "@/components/bug-report-fab";
 import { Toaster } from "@/components/ui/sonner";
 
 const jetbrainsMono = JetBrains_Mono({subsets:['latin'],variable:'--font-mono'});
@@ -49,6 +50,7 @@ export default function RootLayout({
             />
           </Link>
         </header>
+        <BugReportFab />
         {children}
         <Toaster />
       </body>
