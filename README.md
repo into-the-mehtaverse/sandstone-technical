@@ -4,7 +4,7 @@ Document management and legal template editing app (FastAPI + Next.js). Pick a p
 
 Inspired by a workflow from in-house legal at a real estate investment firm: every new deal started from templates (loan agreements, leases, etc.) and was built up using precedent from prior deals with the same counter party.
 
-**Run:** `make dev` at the repo root to start backend and frontend. You'll find frontend at Port 3000.
+**Run:** `make dev` at the repo root to start backend and frontend. You'll find frontend at Port 3000. The repo is pre-seeded with a template and two loan agreements for Sandstone Real Estate LLC.
 **Tests:** `make test` at the repo root
 
 **Layout:** Monorepo — `apps/backend` (API), `apps/web` (Next.js). DB is SQLite under `apps/backend/app/db/`.
