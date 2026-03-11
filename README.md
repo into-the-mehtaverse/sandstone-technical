@@ -1,6 +1,6 @@
 ## Sandstone Loan Doc Template Builder
 
-Document management and legal template editing app (FastAPI + Next.js). Pick a pre-loaded template, edit it, save changes, and search across docs with optional filters by counter party (borrower, buyer, etc.) so you always get the right context.
+Welcome to Sandstone Real Estate LLC's in-house document management and legal template editing app (FastAPI + Next.js). Pick a pre-loaded template, edit it, save changes, and search across docs with optional filters by counter party (borrower, buyer, etc.) so you always get the right context.
 
 Inspired by a workflow from in-house legal at a real estate investment firm: every new deal started from templates (loan agreements, leases, etc.) and was built up using precedent from prior deals with the same counter party.
 
